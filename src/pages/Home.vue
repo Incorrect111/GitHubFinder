@@ -21,26 +21,22 @@
           </div>
           <!-- userName -->
           <div class="title">
-            <p>
-              {{ user.name }}
-            </p>
+            <p>{{ user.name }}</p>
           </div>
           <!-- userReposQuantity -->
           <div class="userReposQuantity">
-            <p>
-             Repositories: {{ user.public_repos }}
-            </p>
+            <p>Repositories: {{ user.public_repos }}</p>
           </div>
         </div>
         <!-- wrapper -->
         <div class="repos__wrapper" v-if="repos">
           <!-- item -->
           <table class="table" v-if="user.public_repos > 0">
-         <tr>
-           <td @click="sort('name')">Name</td>
-           <td @click="sort('star')">Star</td>
-         </tr>
-         </table>
+            <tr>
+              <td @click="sort('name')">Name</td>
+              <td @click="sort('star')">Star</td>
+            </tr>
+          </table>
           <div class="repos-item" v-for="repo in reposSort" :key="repo.id">
             <div class="repos-info">
               <a class="link" target="_blank" :href="repo.html_url">{{ repo.name }}</a>
@@ -48,7 +44,12 @@
             </div>
           </div>
         </div>
-        <!-- <p>{{ search }}</p> -->
+        <section>
+          <div class="button-list" v-show="repos">
+            <div class="btn btnPrimary" @click="prevPage">&#8592;</div>
+            <div class="btn btnPrimary" @click="nextPage">&#8594;</div>
+          </div>
+        </section>
       </div>
     </section>
   </div>
@@ -69,83 +70,100 @@ export default {
       user: null,
       currentSort: "name",
       currentSortDir: "asc",
+      page: {
+        current: 1,
+        length: 5
+      }
     };
   },
   computed: {
-    reposSort (){
-      return this.repos.sort((a, b) => {
+    reposSort() {
+      return this.repos
+        .sort((a, b) => {
           let mod = 1;
-          if (this.currentSortDir === "desc") mod = -1
+          if (this.currentSortDir === "desc") mod = -1;
           // // Name sort
-          if(this.currentSort === 'name'){
-          if (a[this.currentSort] < b[this.currentSort]) return -1 * mod;
-          if (a[this.currentSort] > b[this.currentSort]) return 1 * mod;
+          if (this.currentSort === "name") {
+            if (a[this.currentSort] < b[this.currentSort]) return -1 * mod;
+            if (a[this.currentSort] > b[this.currentSort]) return 1 * mod;
           }
-         if(this.currentSort === 'star')
-          //star sort
-          if (a.stargazers_count < b.stargazers_count)  return -1 * mod;
+          if (this.currentSort === "star")
+            if (a.stargazers_count < b.stargazers_count)
+              //star sort
+              return -1 * mod;
           if (a.stargazers_count > b.stargazers_count) return 1 * mod;
 
           return 0;
         })
+        .filter((row, index) => {
+          let start = (this.page.current - 1) * this.page.length;
+          let end = this.page.current * this.page.length;
+          if (index >= start && index < end) return true;
+        });
     }
   },
   methods: {
     getUser() {
       axios
-      .get(`https://api.github.com/users/${this.search}`)
+        .get(`https://api.github.com/users/${this.search}`)
         .then(res => {
           this.user = res.data;
-      })
-          .catch(err => {
-            this.user = null;
-            console.log(err);
-            this.error = "Can`t find this repository";
-          })
+        })
+        .catch(err => {
+          this.user = null;
+          console.log(err);
+          this.error = "Can`t find this repository";
+        });
 
-          // repos
+      // repos
 
-            axios
-          .get(`https://api.github.com/users/${this.search}/repos`)
-            .then(res => {
-               this.error = null;
-                this.repos = res.data;
-                console.log(this.repos);
-            })
-             .catch(err => {
+      axios
+        .get(`https://api.github.com/users/${this.search}/repos`)
+        .then(res => {
+          this.error = null;
+          this.repos = res.data;
+        })
+        .catch(err => {
           this.repos = null;
           console.log(err);
           this.error = "Can`t find this user";
-        })
+        });
     },
+    //Sort
     sort(e) {
-      if(e == this.currentSort) {
-        this.currentSortDir =  this.currentSortDir === 'asc' ? 'desc' : 'asc'
-      } 
-      this.currentSort = e
-      console.log(e)
-    }
+      if (e == this.currentSort) {
+        this.currentSortDir = this.currentSortDir === "asc" ? "desc" : "asc";
+      }
+      this.currentSort = e;
+    },
 
+    //Pagination
+    nextPage() {
+      if (this.page.current * this.page.length < this.repos.length)
+        this.page.current += 1;
+    },
+    prevPage() {
+      if (this.page.current > 1) this.page.current -= 1;
+    }
   }
 };
 </script>
 <style lang="scss" scoped>
 .btn {
-
   &.btnPrimary {
-  background-color: rgba(122,122,122,0.5);
-  border-color: rgba(3, 3, 3, 0.89);
-}
+    background-color: rgba(122, 122, 122, 0.5);
+    border-color: rgba(3, 3, 3, 0.89);
+  }
 }
 
 .userAvatar {
   margin-top: 30px;
-  box-shadow: 0 0 5px 6px rgba(122,122,122,0.5);
+  box-shadow: 0 0 5px 6px rgba(122, 122, 122, 0.5);
 }
 .title {
   text-align-last: center;
   margin-top: 30px;
-  text-shadow: 1px 1px 2px black, 0 0  1em rgba(122,122,122,0.5);
+  text-shadow: 1px 1px 2px black, 0 0 1em rgba(122, 122, 122, 0.5);
 }
 .container {
   display: flex;
@@ -153,7 +171,7 @@ export default {
   flex-direction: column;
 }
 .userReposQuantity {
-  text-shadow: 1px 1px 2px black, 0 0  1em rgba(122,122,122,0.5); 
+  text-shadow: 1px 1px 2px black, 0 0 1em rgba(122, 122, 122, 0.5);
   text-align: center;
 }
 .repos__wrapper {
@@ -180,10 +198,10 @@ export default {
   left: 100;
 }
 
- td {
-    padding: 0px  50px;
-    white-space: nowrap;
-    // font-size: px;
-    cursor: pointer;
-  }
+td {
+  padding: 0px 50px;
+  white-space: nowrap;
+  // font-size: px;
+  cursor: pointer;
+}
 </style>
