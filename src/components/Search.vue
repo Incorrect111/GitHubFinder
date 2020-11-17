@@ -21,7 +21,7 @@
       </div>
     </div>
     <!-- Search input -->
-    <input type="text" :placeholder="placeholder" v-model="search" />
+    <input type="text" :placeholder="placeholder" v-model="search"/>
   </div>
 </template>
 
@@ -52,6 +52,7 @@ export default {
 </script>
 
 <style scoped>
+
 svg {
   color: #e4e4e4;
 }
@@ -81,6 +82,7 @@ input {
   min-width: 400px;
   height: auto;
 }
+
 </style>
 
 

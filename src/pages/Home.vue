@@ -8,7 +8,7 @@
         </div>
 
         <!-- search -->
-        <search :value="search" placeholder="Type user name" @search="search = $event" />
+        <search :value="search" placeholder="Type user name" @search="search = $event"/>
         <br />
         <!-- buttons -->
         <button v-if="!user" class="btn btnPrimary" @click="getUser">Search</button>
@@ -45,11 +45,8 @@
           </div>
         </div>
         <section>
-          <div class="button-list" v-show="repos">
-            <div class="btn btnPrimary" @click="prevPage">&#8592;</div>
-            <div class="btn btnPrimary" @click="nextPage">&#8594;</div>
-          </div>
-        </section>
+          <pagination :repos="repos" :page="page" v-show="repos"/>
+          </section>
       </div>
     </section>
   </div>
@@ -57,19 +54,24 @@
 
 <script>
 import search from "@/components/Search.vue";
+import pagination from "@/components/Pagination.vue";
 import axios from "axios";
 export default {
   components: {
-    search
+    search,
+    pagination
   },
   data() {
     return {
+      sortObject: {
+        column: 'name',
+        type: 'asc'
+      },
       search: "",
       error: null,
       repos: null,
       user: null,
-      currentSort: "name",
-      currentSortDir: "asc",
+      
       page: {
         current: 1,
         length: 5
@@ -81,13 +83,13 @@ export default {
       return this.repos
         .sort((a, b) => {
           let mod = 1;
-          if (this.currentSortDir === "desc") mod = -1;
+          if (this.sortObject.type=== "desc") mod = -1;
           // // Name sort
-          if (this.currentSort === "name") {
-            if (a[this.currentSort] < b[this.currentSort]) return -1 * mod;
-            if (a[this.currentSort] > b[this.currentSort]) return 1 * mod;
+          if (this.sortObject.column === "name") {
+            if (a[this.sortObject.column] < b[this.sortObject.column]) return -1 * mod;
+            if (a[this.sortObject.column] > b[this.sortObject.column]) return 1 * mod;
           }
-          if (this.currentSort === "star")
+          if (this.sortObject.column === "star")
             if (a.stargazers_count < b.stargazers_count)
               //star sort
               return -1 * mod;
@@ -102,10 +104,12 @@ export default {
         });
     }
   },
+
   methods: {
     getUser() {
+      const API_URL_GITHUB = 'https://api.github.com';
       axios
-        .get(`https://api.github.com/users/${this.search}`)
+        .get(`${API_URL_GITHUB}/users/${this.search}`)
         .then(res => {
           this.user = res.data;
         })
@@ -118,7 +122,7 @@ export default {
       // repos
 
       axios
-        .get(`https://api.github.com/users/${this.search}/repos`)
+        .get(`${API_URL_GITHUB}/users/${this.search}/repos`)
         .then(res => {
           this.error = null;
           this.repos = res.data;
@@ -128,23 +132,25 @@ export default {
           console.log(err);
           this.error = "Can`t find this user";
         });
+
     },
     //Sort
     sort(e) {
-      if (e == this.currentSort) {
-        this.currentSortDir = this.currentSortDir === "asc" ? "desc" : "asc";
+      if (e == this.sortObject.column) {
+        this.sortObject.type= this.sortObject.type=== "asc" ? "desc" : "asc";
       }
-      this.currentSort = e;
+      this.sortObject.column = e;
     },
 
-    //Pagination
-    nextPage() {
-      if (this.page.current * this.page.length < this.repos.length)
-        this.page.current += 1;
-    },
-    prevPage() {
-      if (this.page.current > 1) this.page.current -= 1;
-    }
+      enter () {
+        document.body.addEventListener("keyup", e => {
+                if (e.keyCode === 13) {
+                    getUser()
+                    console.log('enter')
+                }
+            });
+  }
+
   }
 };
 </script>
