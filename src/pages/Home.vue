@@ -71,7 +71,6 @@ export default {
       error: null,
       repos: null,
       user: null,
-      
       page: {
         current: 1,
         length: 5
@@ -108,30 +107,52 @@ export default {
   methods: {
     getUser() {
       const API_URL_GITHUB = 'https://api.github.com';
-      axios
-        .get(`${API_URL_GITHUB}/users/${this.search}`)
-        .then(res => {
-          this.user = res.data;
-        })
-        .catch(err => {
-          this.user = null;
-          console.log(err);
+
+      const promiseRepos = axios.get(`${API_URL_GITHUB}/users/${this.search}/repos`);
+      const promisrUser = axios.get(`${API_URL_GITHUB}/users/${this.search}`);
+
+
+      axios.all([promisrUser, promiseRepos])
+      .then(axios.spread(function (usr, rep){
+        this.user = usr.data
+        this.repos = rep.data
+      }))
+
+
+    
+      .catch(err => {
+        // this.user = null;
+        console.log(err);
           this.error = "Can`t find this repository";
-        });
+      })
 
-      // repos
+        // axios
+        //   .get(`${API_URL_GITHUB}/users/${this.search}`)
+        //   .then(res => {
+        //     this.user = res.data;
+        //   })
+        //   .catch(err => {
+        //     this.user = null;
+        //     console.log(err);
+        //     this.error = "Can`t find this repository";
+        //   });
 
-      axios
-        .get(`${API_URL_GITHUB}/users/${this.search}/repos`)
-        .then(res => {
-          this.error = null;
-          this.repos = res.data;
-        })
-        .catch(err => {
-          this.repos = null;
-          console.log(err);
-          this.error = "Can`t find this user";
-        });
+        // repos
+
+  
+
+        // axios
+        //   .get(`${API_URL_GITHUB}/users/${this.search}/repos`)
+        //   .then(res => {
+        //     this.error = null;
+        //     this.repos = res.data;
+        //   })
+        //   .catch(err => {
+        //     this.repos = null;
+        //     console.log(err);
+        //     this.error = "Can`t find this user";
+        //   });
+
 
     },
     //Sort
